@@ -3,7 +3,7 @@ const firebaseConfig = require('../util/firebaseConf');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
-const { validateSignupData, validateLoginData } = require('../util/validators');
+const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
 
 exports.signup = (req,res)=>{
@@ -57,7 +57,7 @@ exports.signup = (req,res)=>{
        });
 
 };
-
+// Login user in
 exports.login = (req,res)=>{
     const loginCredentials = {
         email: req.body.email,
@@ -89,8 +89,26 @@ exports.login = (req,res)=>{
 
     });
  };
+ //Add use details
+ exports.addUserDetails = (req,res)=>{
+    let userDetails = reduceUserDetails(req.body);
+
+    db.doc(`/users/${req.user.handle}`).update(userDetails)
+    .then(()=>{
+        return res.json({message: "Details updated Successful"});
+    })
+    .catch((err)=>{
+        console.error(err);
+        return res.status(500).json({error: err.code});
+    });
+ };
+ //get own user details for specifying actions excuted by the you
+ exports.getAuthenticatedUser = (req,res)=>{
+
+ };
 
 
+//image a profile image for user
  exports.uploadImage = (req, res)=>{
 
     const Busboy = require('busboy');
@@ -103,8 +121,8 @@ exports.login = (req,res)=>{
     let imageToBeUploaded ={} ;
     busboy.on('file',(fieldname,file,filename, encoding, mimetype)=>{
 
-    if(mimetype !== image/jpeg && mimetype !== image/webp && mimetype !== image/png){
-        return res.status(400).json({error: 'file type must be jpeg/png/webp'});
+    if(mimetype !== image/jpeg && mimetype && mimetype !== image/png){
+        return res.status(400).json({error: 'file type must be jpeg/png'});
     }    
     let imgExtension = filename.split('.')[filename.split('.').length - 1];
     imageFileName = `${Math.round(Math.random()*10000000000)}.${imgExtension}`;

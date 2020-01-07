@@ -6,7 +6,7 @@ const app = express();
 
 
   const { getAllweshout, postOneWeshout } = require('./handlers/weshout');
-  const { signup, login, uploadImage } = require('./handlers/users');
+  const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser } = require('./handlers/users');
 
   const FBaseauth = require('./util/FBaseauth');
 
@@ -17,7 +17,7 @@ const app = express();
 //Route for screams weshout
  app.get('/weshout', getAllweshout);
  app.post('/weshout', FBaseauth, postOneWeshout );
-
+ app.get('/user', FBaseauth, getAuthenticatedUser)
 
 
  //users route
@@ -26,5 +26,7 @@ const app = express();
  app.post('/login', login);
 
  app.post('/user/image', FBaseauth, uploadImage);
+ app.post('/user',FBaseauth, addUserDetails);
+ 
 
  exports.api = functions.region('europe-west2').https.onRequest(app);

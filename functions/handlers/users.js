@@ -52,7 +52,7 @@ exports.signup = (req,res)=>{
         if(err.code === 'auth/email-already-in-use'){
             return res.status(400).json({email: 'Email already in use'});
         }else{
-        return res.status(500).json({error: err.code});
+        return res.status(500).json({general: 'Something went wrong, please try again.'});
        }
        });
 
@@ -84,7 +84,7 @@ exports.login = (req,res)=>{
             return res.status(404).json({Invalid: 'Invalid email or password'});
         }
         else{
-            return res.status(500).json({error: err.code});
+            return res.status(500).json({general: 'Something went wrong, please try again.'});
         }
 
     });
@@ -102,9 +102,75 @@ exports.login = (req,res)=>{
         return res.status(500).json({error: err.code});
     });
  };
+ //get any user details
+ exports.getUserDetails = (req,res)=>{
+    let userData = {};
+    db.doc(`/users/${req.params.handle}`).get()
+    .then((doc)=>{
+        if(doc.exists){
+            userData.user = doc.data();
+            return db.collection('weshout').where('userHandle','==', req.params.handle)
+            .orderBy('createdAt','desc')
+            .get();
+        }else{
+            return res.status(404).json({error: 'User not found'});
+        }
+    })
+    .then((data)=>{
+        userData.weshout = [];
+        data.forEach(doc =>{
+            userData.weshout.push({
+                body: doc.data().body,
+                createdAt: doc.data().createdAt,
+                userHandle: doc.data().userHandle,
+                userImage: doc.data().userImage,
+                likeCount: doc.data().likeCount,
+                commentCount: doc.data().commentCount,
+                weshoutId: doc.id
+            });
+        });
+        return res.json(userData);
+    })
+    .catch((err)=>{
+        console.error(err);
+        return res.status(500).json({error: err.code});
+    });
+ };
  //get own user details for specifying actions excuted by the you
  exports.getAuthenticatedUser = (req,res)=>{
+   let userData = {};
+   db.doc(`users/${req.user.handle}`).get()
+   .then((doc)=>{
+    if(doc.exists){
+        userData.credentials = doc.data();
+        return db.collections('likes').where('userHandle', '==', req.user.handle).get();
+    }
+   }).then((data)=>{
+        userData.likes = [];
+        data.forEach(doc=>{
+            userData.likes.push(doc.data());
+        });
+        return db.collection('notifications').where('recipient','==', req.user.handle)
+        .orderBy('createdAt','desc').limit(15).get();
 
+   }).then((data)=>{
+       userData.notifications = [];
+       data.forEach(doc=>{
+        userData.notifications.push({
+            recipient: doc.data().recipient,
+            sender: doc.data().sender,
+            createdAt: doc.data().createdAt,
+            weshoutId: doc.data().weshoutId,
+            type: doc.data().type,
+            read: doc.data().read,
+            notificationId: doc.id
+        });
+       });
+       return res.json(userData);
+   }).catch(err =>{
+       console.error(err);
+       return res.status(500).json({error: err.code});
+   });
  };
 
 
@@ -159,3 +225,21 @@ exports.login = (req,res)=>{
     busboy.end(req.rawBody);
 
  };
+
+exports.markNotitificationsRead = (req,res)=>{
+    let batch = db.batch();
+    req.body.forEach(notificationId =>{
+        const notification = db.doc(`/notifications/${notificationId}`);
+        batch.update(notification, {read: true});
+    });
+    batch.commit()
+    .then(()=>{
+        return res.json({message: 'Notification marked read'});
+    })
+    .catch((err)=>{
+        console.error(err);
+        return res.status(500).json({error: err.code});
+    });
+};
+
+ 

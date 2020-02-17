@@ -21,7 +21,25 @@ let db = {
             likeCount: 5,
             commentCount: 2
         }
-    ] 
+    ],
+    comments: [
+        {
+            userHandle: 'user',
+            weshoutId: 'dkjfkdjsjkjdksjdkjfkdkl',
+            body: 'God is great',
+            createdAt: 'Wed, 25 Dec 2019 18:48:40 GMT'
+        }
+    ] ,
+    notification: [
+        {
+            recipient: 'user',
+            sender: 'ekene',
+            read: 'true | false',
+            weshoutId: 'skdiddkkdiehheifeiejefiej',
+            type: 'like | comment',
+            createdAt: 'Wed, 25 Dec 2019 18:48:40 GMT'
+        }
+    ]
 };
 
 const userDetails = {

@@ -34,7 +34,7 @@ return {
 exports.validateLoginData = (data) =>{
     let errors = {};
     if(isEmpty(data.email)) errors.email = 'must not be empty';
-    if(isEmpty(data.password)) errors.email = 'must not be empty';
+    if(isEmpty(data.password)) errors.password = 'must not be empty';
     
     return {
         errors,
@@ -55,5 +55,5 @@ exports.reduceUserDetails = (data) =>{
     }
     if(!isEmpty(data.location.trim())) userDetails.location = data.location;
 
-    return userDetails;
+    return userDetails; 
 };

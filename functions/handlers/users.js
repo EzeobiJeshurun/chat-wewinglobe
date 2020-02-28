@@ -38,7 +38,7 @@ exports.signup = (req,res)=>{
         const credentials = {
            email: newUser.email,
            handle: newUser.handle,
-           createdAt: new Date().toGMTString(),
+           createdAt: new Date().toISOString(),
            imageUrl: `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${noImg}?alt=media`,
            userId
         };
@@ -77,15 +77,10 @@ exports.login = (req,res)=>{
         return res.json({token});
     })
     .catch((err)=>{
-        console.error(err);
-        if(err.code=== 'auth/wrong-password'){
-            return res.status(403).json({Invalid: 'Invalid email or password'});
-        }else if(err.code === 'auth/user-not-found' ){
-            return res.status(404).json({Invalid: 'Invalid email or password'});
-        }
-        else{
-            return res.status(500).json({general: 'Something went wrong, please try again.'});
-        }
+        
+    
+        return res.status(404).json({general: 'Invalid email or password, please try again.'});
+    
 
     });
  };
@@ -143,7 +138,7 @@ exports.login = (req,res)=>{
    .then((doc)=>{
     if(doc.exists){
         userData.credentials = doc.data();
-        return db.collections('likes').where('userHandle', '==', req.user.handle).get();
+        return db.collection('likes').where('userHandle', '==', req.user.handle).get();
     }
    }).then((data)=>{
         userData.likes = [];
@@ -226,7 +221,7 @@ exports.login = (req,res)=>{
 
  };
 
-exports.markNotitificationsRead = (req,res)=>{
+exports.markNotificationsRead = (req,res)=>{
     let batch = db.batch();
     req.body.forEach(notificationId =>{
         const notification = db.doc(`/notifications/${notificationId}`);

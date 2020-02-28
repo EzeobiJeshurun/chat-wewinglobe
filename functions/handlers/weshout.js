@@ -14,7 +14,7 @@ exports.getAllweshout = (req,res)=>{
                 weshoutId: doc.id,
                 body: doc.data().body,
                 createdAt: doc.data().createdAt,
-                useHandle: doc.data().useHandle,
+                userHandle: doc.data().userHandle,
                 userImage: doc.data().userImage,
                 likeCount: doc.data().likeCount,
                 commentCount: doc.data().commentCount
@@ -31,9 +31,9 @@ exports.getAllweshout = (req,res)=>{
      }
     const newWeshout = {
         body : req.body.body,
-        useHandle: req.user.handle,
+        userHandle: req.user.handle,
         userImage: req.user.imageUrl,
-        createdAt: new Date().toGMTString(),
+        createdAt: new Date().toISOString(),
         likeCount: 0,
         commentCount: 0
     };
@@ -42,13 +42,14 @@ exports.getAllweshout = (req,res)=>{
 
         const resWeshout = newWeshout;
         resWeshout.weshoutId = doc.id;
-        return res.json(resWeshout)
-        .catch(err => {
-            res.status(500).json({error: 'something went wrong'});
-            console.error(err);
-        });
+        return res.json(resWeshout);
+        
+    }).catch(err => {
+        res.status(500).json({error: 'something went wrong'});
+        console.error(err);
     });
- };
+};  
+ 
 //fetch one weshout
  exports.getWeshout = (req,res)=>{
     let weshoutData = {};
@@ -60,7 +61,7 @@ exports.getAllweshout = (req,res)=>{
         weshoutData= doc.data();
         weshoutData.weshoutId = doc.id;
         return db.collection('comments').orderBy('createdAt', 'desc')
-        .where('screamId','==', req.params.screamId).get();
+        .where('weshoutId','==', req.params.weshoutId).get();
     })
     .then(data => {
         weshoutData.comments = [];
@@ -80,13 +81,13 @@ exports.getAllweshout = (req,res)=>{
     if(req.body.body.trim() === '') return res.status(400).json({comment: 'must not be empty'});
     const newComment ={
         body: req.body.body,
-        createdAt: new Date().toGMTString(),
+        createdAt: new Date().toISOString(),
         weshoutId: req.params.weshoutId,
         userHandle: req.user.handle,
         userImage: req.user.imageUrl
     };
 
-    db.doc(`/weshout/${req.params.screamId}`).get()
+    db.doc(`/weshout/${req.params.weshoutId}`).get()
     .then(doc=>{
         if(!doc.exists){
             return res.status(404).json({error: 'Weshout not found'});
@@ -108,7 +109,7 @@ exports.getAllweshout = (req,res)=>{
 
  exports.likeWeshout  = (req, res)=>{
     const likeDocument = db.collection('likes').where('userHandle', '==', req.user.handle)
-    .where('screamId', '==', req.params.screamId).limit(1);
+    .where('weshoutId', '==', req.params.weshoutId).limit(1);
 
     const weshoutDocument = db.doc(`/weshout/${req.params.weshoutId}`);
 

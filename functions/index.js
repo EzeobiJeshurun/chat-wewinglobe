@@ -6,9 +6,12 @@ const app = express();
 
 
   const { getAllweshout, postOneWeshout, getWeshout, commentOnWeshout, likeWeshout, unlikeWeshout,deleteWeshout } = require('./handlers/weshout');
-  const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser, getUserDetails, markNotificationsRead } = require('./handlers/users');
+  const { signup, login, uploadImage, addUserDetails, getAuthenticatedUser, getUserDetails, markNotificationsRead, sendAnEmailToChangePassword } = require('./handlers/users');
 
   const FBaseauth = require('./util/FBaseauth');
+  const cors = require('cors');
+  app.use(cors());
+
 
 
 
@@ -28,7 +31,7 @@ const app = express();
  app.post('/signup', signup);
 
  app.post('/login', login);
-
+ app.post('/user/reset',sendAnEmailToChangePassword);
  app.post('/user/image', FBaseauth, uploadImage);
  app.post('/user',FBaseauth, addUserDetails);
  app.get('/user', FBaseauth, getAuthenticatedUser);

@@ -3,8 +3,21 @@ const firebaseConfig = require('../util/firebaseConf');
 const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
+
+
 const { validateSignupData, validateLoginData, reduceUserDetails } = require('../util/validators');
 
+
+exports.sendAnEmailToChangePassword = (req, res)=>{
+    const userEmail = req.body.email;
+    firebase.auth().sendPasswordResetEmail(userEmail)
+    .then(()=>{
+        return res.status(200).json({message: "Reset email sent."});
+    })
+    .catch(()=>{
+        return res.status(500).json({error: "Something went wrong?"});
+    });
+};
 
 exports.signup = (req,res)=>{
     const newUser = {
@@ -48,9 +61,9 @@ exports.signup = (req,res)=>{
     })
     
     .catch((err)=>{
-        console.error(err);
+        console.log(err.code);
         if(err.code === 'auth/email-already-in-use'){
-            return res.status(400).json({email: 'Email already in use'});
+            return res.status(500).json({email: 'Email already in use'});
         }else{
         return res.status(500).json({general: 'Something went wrong, please try again.'});
        }
@@ -182,9 +195,9 @@ exports.login = (req,res)=>{
     let imageToBeUploaded ={} ;
     busboy.on('file',(fieldname,file,filename, encoding, mimetype)=>{
 
-    if(mimetype !== image/jpeg && mimetype && mimetype !== image/png){
+    if(mimetype !== "image/jpeg" && mimetype !== "image/png" && mimetype !== "image/jpg"){
         return res.status(400).json({error: 'file type must be jpeg/png'});
-    }    
+   }    
     let imgExtension = filename.split('.')[filename.split('.').length - 1];
     imageFileName = `${Math.round(Math.random()*10000000000)}.${imgExtension}`;
 
@@ -192,9 +205,11 @@ exports.login = (req,res)=>{
 
     imageToBeUploaded = {filepath, mimetype};
     file.pipe(fs.createWriteStream(filepath));
+    console.log('reached the end of on file');
     });
 
     busboy.on('finish', ()=>{
+        console.log('entered finish call');
         admin.storage().bucket().upload(imageToBeUploaded.filepath,{
             resumable: false,
             metadata: {
@@ -204,9 +219,9 @@ exports.login = (req,res)=>{
             }
             
         }).then(()=>{
-        
+        console.log('loading was successful');
             
-            const imgUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${imageFileName}?alt=media`;
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/${imageFileName}?alt=media`;
 
            return db.doc(`/users/${req.user.handle}`).update({imageUrl});
        
@@ -214,11 +229,13 @@ exports.login = (req,res)=>{
             return res.status(200).json({message:'The image uploaded successfully'});
         })
         .catch((err)=>{
+            console.log(err);
             return res.status(500).json({error: err.code});
         });
     });
+    
     busboy.end(req.rawBody);
-
+   
  };
 
 exports.markNotificationsRead = (req,res)=>{
